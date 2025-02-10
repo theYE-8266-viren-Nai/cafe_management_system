@@ -132,3 +132,4 @@ Route::group(['prefix' => 'ajax'], function () {
 });
 Route::get('/phpCode', function () {
     return view('phpCode'); });
+//I have made changes
