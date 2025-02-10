@@ -27,7 +27,7 @@
         <table class="table table-bordered">
             <thead class="table-dark">
                 <th>
-                    <th>Order Code</th>
+                    {{--  <th>Order Code</th>  --}}
                     <th>User Name</th>
                     <th>Item</th>
                     <th>Qty</th>
@@ -44,6 +44,7 @@
                     @foreach($orderList as $order)
                         @if ($order->order_code !== $lastOrderCode)
                             {{-- Display the order code once per group --}}
+                            {{--  @dd($order);  --}}
                             <tr>
                                 <td colspan="6" class="bg-light">
                                     <form action="{{ route('admin.order.updateStatus') }}" method="POST">
@@ -68,10 +69,11 @@
                         {{-- Order Details --}}
                         <tr class="tr-shadow">
                             <td></td> <!-- Empty column since order code is displayed as a header -->
+                            {{--  @dd($order);  --}}
                             <td>{{ $order->user_name }}</td>
                             <td>{{ $order->product_name }}</td>
                             <td>{{ $order->qty }}</td>
-                            <td>${{ number_format($order->total, 2) }}</td>
+                            <td>{{ $order->total}}</td>
                             <td>{{ $order->status == 0 ? 'Pending' : 'Confirmed' }}</td>
                             <td>{{ $order->stock }}</td>
                         </tr>

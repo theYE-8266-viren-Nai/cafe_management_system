@@ -12,6 +12,7 @@
                         <th>Total</th>
                         <th>Quantity</th>
                         <th>Order Status</th>
+                        <th>Action</th>
                     </tr>
                 </thead>
                 <tbody class="align-middle">
@@ -21,14 +22,12 @@
                     @endphp
 
                     @foreach ($groupedOrders as $orderCode => $orders)
-                        <!-- Display the order code as a header row -->
                         <tr>
-                            <td colspan="5" class="bg-light font-weight-bold">
+                            <td colspan="6" class="bg-light font-weight-bold">
                                 Order Code: {{ $orderCode }}
                             </td>
                         </tr>
 
-                        <!-- Display individual orders under this order code -->
                         @foreach ($orders as $order)
                             <tr>
                                 <td>{{ $counter++ }}</td>
@@ -38,27 +37,12 @@
                                 <td class="{{ $order->status === 'Rejected' ? 'text-danger' : ($order->status === 'Confirmed' ? 'text-success' : '') }}">
                                     {{ $order->status }}
                                 </td>
+                                <td>
+                                    <button class="btn btn-info btn-sm" onclick="showOrderDetails('{{ $order->order_code }}', '{{ $order->status }}')">
+                                        Details
+                                    </button>
+                                </td>
                             </tr>
-
-                            <!-- Trigger Modal on Page Load -->
-                            @if ($order->status === 'Rejected' || $order->status === 'Confirmed')
-                                <script>
-                                    {{--  window.addEventListener('load', function() {
-                                        var modal = new bootstrap.Modal(document.getElementById('statusModal'));
-                                        modal.show();
-                                    });  --}}
-                                    window.addEventListener('load', function () {
-                                        var modal = new bootstrap.Modal(document.getElementById('statusModal'));
-                                        modal.show();
-
-                                        document.getElementById('statusModal').addEventListener('hidden.bs.modal', function () {
-                                            document.body.classList.remove('modal-open');  // Remove Bootstrap modal class
-                                            document.querySelector('.modal-backdrop')?.remove();  // Remove the backdrop manually
-                                        });
-                                    });
-
-                                </script>
-                            @endif
                         @endforeach
                     @endforeach
                 </tbody>
@@ -68,23 +52,14 @@
 </div>
 
 <!-- Bootstrap Modal -->
-<div class="modal fade" id="statusModal" tabindex="-1" aria-labelledby="statusModalLabel" aria-hidden="true" >
+<div class="modal fade" id="statusModal" tabindex="-1" aria-labelledby="statusModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <div class="modal-header
-                {{ isset($order) && $order->status === 'Rejected' ? 'bg-danger' : 'bg-success' }}
-                text-white">
-                <h5 class="modal-title" id="statusModalLabel">
-                    {{ isset($order) && $order->status === 'Rejected' ? 'Order Rejected' : 'Order Confirmed' }}
-                </h5>
+            <div class="modal-header text-white">
+                <h5 class="modal-title" id="statusModalLabel"></h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="text-center modal-body">
-                {{ isset($order) && $order->status === 'Rejected'
-                    ? 'Your order has been rejected due to insufficient stock.'
-                    : 'Congratulations! Your order has been confirmed.'
-                }}
-            </div>
+            <div class="text-center modal-body"></div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
             </div>
@@ -92,4 +67,33 @@
     </div>
 </div>
 
+<script>
+    function showOrderDetails(orderCode, status) {
+        var modalMessage = '';
+        var modalTitle = '';
+        var modalClass = '';
+
+        if (status === 'Rejected') {
+            modalMessage = 'Your order ' + orderCode + ' has been rejected due to insufficient stock.';
+            modalTitle = 'Order Rejected';
+            modalClass = 'bg-danger';
+        } else if (status === 'Confirmed') {
+            modalMessage = 'Congratulations! Your order ' + orderCode + ' has been confirmed.';
+            modalTitle = 'Order Confirmed';
+            modalClass = 'bg-success';
+        } else {
+            modalMessage = 'Your order ' + orderCode + ' is still being processed.';
+            modalTitle = 'Order Pending';
+            modalClass = 'bg-warning';
+        }
+
+        var modal = new bootstrap.Modal(document.getElementById('statusModal'));
+        document.getElementById('statusModalLabel').innerText = modalTitle;
+        document.querySelector('.modal-header').className = 'modal-header text-white ' + modalClass;
+        document.querySelector('.modal-body').innerText = modalMessage;
+        modal.show();
+    }
+</script>
+<p>hello worl</p>
 @endsection
+//this is testing whether the codes have been altered or not t

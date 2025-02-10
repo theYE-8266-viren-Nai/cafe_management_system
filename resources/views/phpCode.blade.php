@@ -1,125 +1,141 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
-  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-  <head>
-    <title>Membership Form</title>
-    <link rel="stylesheet" type="text/css" href="common.css" />
-    <style type="text/css">
-      .error { background: #d33; color: white; padding: 0.2em; }
-    </style>
-  </head>
-  <body>
-
-
 <?php
+session_start();
 
-if ( isset( $_POST["submitButton"] ) ) {
-  processForm();
-} else {
-  displayForm( array() );
+// Function to sanitize input
+function sanitizeInput($data) {
+    return htmlspecialchars(stripslashes(trim($data)));
 }
 
-function validateField( $fieldName, $missingFields ) {
-  if ( in_array( $fieldName, $missingFields ) ) {
-    echo ' class="error"';
-  }
-}
+// Handle multi-step form logic
+$step = isset($_GET['step']) ? (int)$_GET['step'] : 1;
 
-function setValue( $fieldName ) {
-  if ( isset( $_POST[$fieldName] ) ) {
-    echo $_POST[$fieldName];
-  }
-}
+if (isset($_POST['step1'])) {
+    $username = sanitizeInput($_POST['username']);
+    $password = sanitizeInput($_POST['password']);
 
-function setChecked( $fieldName, $fieldValue ) {
-  if ( isset( $_POST[$fieldName] ) and $_POST[$fieldName] == $fieldValue ) {
-    echo ' checked="checked"';
-  }
-}
-
-function setSelected( $fieldName, $fieldValue ) {
-  if ( isset( $_POST[$fieldName] ) and $_POST[$fieldName] == $fieldValue ) {
-    echo ' selected="selected"';
-  }
-}
-
-function processForm() {
-  $requiredFields = array( "firstName", "lastName", "password1", "password2", "gender" );
-  $missingFields = array();
-
-  foreach ( $requiredFields as $requiredField ) {
-    if ( !isset( $_POST[$requiredField] ) or !$_POST[$requiredField] ) {
-      $missingFields[] = $requiredField;
+    if (empty($username) || empty($password)) {
+        $error = "Username and password are required.";
+    } else {
+        $_SESSION['username'] = $username;
+        $_SESSION['password'] = $password;
+        header("Location: ?step=2");
+        exit();
     }
-  }
-
-  if ( $missingFields ) {
-    displayForm( $missingFields );
-  } else {
-    displayThanks();
-  }
 }
 
-function displayForm( $missingFields ) {
-?>
-    <h1>Membership Form</h1>
+if (isset($_POST['step2'])) {
+    $_SESSION['majorFaculty'] = sanitizeInput($_POST['majorFaculty']);
+    $_SESSION['year'] = sanitizeInput($_POST['year']);
+    $_SESSION['subjects'] = isset($_POST['subjects']) ? $_POST['subjects'] : [];
 
-    <?php if ( $missingFields ) { ?>
-    <p class="error">There were some problems with the form you submitted. Please complete the fields highlighted below and click Send Details to resend the form.</p>
-    <?php } else { ?>
-    <p>Thanks for choosing to join The Widget Club. To register, please fill in your details below and click Send Details. Fields marked with an asterisk (*) are required.</p>
-    <?php } ?>
-
-    <form action="registration.php" method="post">
-      <div style="width: 30em;">
-
-        <label for="firstName"<?php validateField( "firstName", $missingFields ) ?>>First name *</label>
-        <input type="text" name="firstName" id="firstName" value="<?php setValue( "firstName" ) ?>" />
-
-        <label for="lastName"<?php validateField( "lastName", $missingFields ) ?>>Last name *</label>
-        <input type="text" name="lastName" id="lastName" value="<?php setValue( "lastName" ) ?>" />
-
-        <label for="password1"<?php if ( $missingFields ) echo ' class="error"' ?>>Choose a password *</label>
-        <input type="password" name="password1" id="password1" value="" />
-        <label for="password2"<?php if ( $missingFields ) echo ' class="error"' ?>>Retype password *</label>
-        <input type="password" name="password2" id="password2" value="" />
-
-        <label<?php validateField( "gender", $missingFields ) ?>>Your gender: *</label>
-        <label for="genderMale">Male</label>
-        <input type="radio" name="gender" id="genderMale" value="M"<?php setChecked( "gender", "M" )?>/>
-        <label for="genderFemale">Female</label>
-        <input type="radio" name="gender" id="genderFemale" value="F"<?php setChecked( "gender", "F" )?> />
-
-        <label for="favoriteWidget">What's your favorite widget? *</label>
-        <select name="favoriteWidget" id="favoriteWidget" size="1">
-          <option value="superWidget"<?php setSelected( "favoriteWidget", "superWidget" ) ?>>The SuperWidget</option>
-          <option value="megaWidget"<?php setSelected( "favoriteWidget", "megaWidget" ) ?>>The MegaWidget</option>
-          <option value="wonderWidget"<?php setSelected( "favoriteWidget", "wonderWidget" ) ?>>The WonderWidget</option>
-        </select>
-
-        <label for="newsletter">Do you want to receive our newsletter?</label>
-        <input type="checkbox" name="newsletter" id="newsletter" value="yes"<?php setChecked( "newsletter", "yes" ) ?> />
-
-        <label for="comments">Any comments?</label>
-        <textarea name="comments" id="comments" rows="4" cols="50"><?php setValue( "comments" ) ?></textarea>
-
-        <div style="clear: both;">
-          <input type="submit" name="submitButton" id="submitButton" value="Send Details" />
-          <input type="reset" name="resetButton" id="resetButton" value="Reset Form" style="margin-right: 20px;" />
-        </div>
-
-      </div>
-    </form>
-<?php
+    header("Location: ?step=3");
+    exit();
 }
 
-function displayThanks() {
-?>
-    <h1>Thank You</h1>
-    <p>Thank you, your application has been received.</p>
-<?php
+if (isset($_POST['step3'])) {
+    $_SESSION['newsletter'] = isset($_POST['newsletter']) ? 1 : 0;
+    $_SESSION['comments'] = sanitizeInput($_POST['comments']);
+    header("Location: ?step=4");
+    exit();
+}
+
+// Handle file upload
+if (isset($_POST["uploadPhoto"])) {
+    if (isset($_FILES["photo"]) && $_FILES["photo"]["error"] == UPLOAD_ERR_OK) {
+        if ($_FILES["photo"]["type"] != "image/jpeg") {
+            $uploadError = "JPEG photos only, please!";
+        } elseif (!move_uploaded_file($_FILES["photo"]["tmp_name"], "photos/" . basename($_FILES["photo"]["name"]))) {
+            $uploadError = "Sorry, there was a problem uploading that photo.";
+        } else {
+            $_SESSION["photoPath"] = "photos/" . basename($_FILES["photo"]["name"]);
+            header("Location: ?step=5");
+            exit();
+        }
+    } else {
+        $uploadError = "Please select a valid JPEG file.";
+    }
 }
 ?>
 
-  </body>
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Multi-Step Form with File Upload</title>
+</head>
+<body>
+
+<h1>Step <?php echo $step; ?></h1>
+
+<?php if (isset($error)) { echo "<p style='color:red;'>$error</p>"; } ?>
+
+<form method="post" enctype="multipart/form-data">
+
+    <?php if ($step == 1) : ?>
+        <h2>Student Login</h2>
+        <label>Username:</label>
+        <input type="text" name="username" value="<?php echo $_SESSION['username'] ?? ''; ?>" required><br>
+        <label>Password:</label>
+        <input type="password" name="password" required><br>
+        <input type="submit" name="step1" value="Next">
+    <?php endif; ?>
+
+    <?php if ($step == 2) : ?>
+        <h2>Choose Your Major</h2>
+        <input type="radio" name="majorFaculty" value="software" required> Software Engineering<br>
+        <input type="radio" name="majorFaculty" value="hardware" required> Hardware Engineering<br>
+
+        <h2>Select Your Year</h2>
+        <select name="year" required>
+            <option value="first">First Year</option>
+            <option value="second">Second Year</option>
+            <option value="third">Third Year</option>
+        </select><br>
+
+        <h2>Subjects</h2>
+        <input type="checkbox" name="subjects[]" value="knowledge"> Knowledge Engineering<br>
+        <input type="checkbox" name="subjects[]" value="cloud"> Cloud Computing<br>
+
+        <input type="submit" name="step2" value="Next">
+        <a href="?step=1"><button type="button">Back</button></a>
+    <?php endif; ?>
+
+    <?php if ($step == 3) : ?>
+        <h2>Preferences</h2>
+        <label>Subscribe to Newsletter?</label>
+        <input type="checkbox" name="newsletter" value="1"><br>
+        <label>Comments:</label>
+        <textarea name="comments"></textarea><br>
+
+        <input type="submit" name="step3" value="Next">
+        <a href="?step=2"><button type="button">Back</button></a>
+    <?php endif; ?>
+
+    <?php if ($step == 4) : ?>
+        <h2>Upload Your Photo</h2>
+        <?php if (isset($uploadError)) echo "<p style='color:red;'>$uploadError</p>"; ?>
+        <input type="file" name="photo" accept="image/jpeg"><br>
+        <input type="submit" name="uploadPhoto" value="Upload Photo">
+        <a href="?step=3"><button type="button">Back</button></a>
+    <?php endif; ?>
+
+</form>
+
+<?php if ($step == 5) : ?>
+    <h2>Thank You!</h2>
+    <p><strong>Name:</strong> <?php echo $_SESSION['username']; ?></p>
+    <p><strong>Faculty:</strong> <?php echo $_SESSION['majorFaculty']; ?></p>
+    <p><strong>Year:</strong> <?php echo $_SESSION['year']; ?></p>
+    <p><strong>Subjects:</strong> <?php echo !empty($_SESSION['subjects']) ? implode(", ", $_SESSION['subjects']) : "None"; ?></p>
+    <p><strong>Newsletter:</strong> <?php echo $_SESSION['newsletter'] ? "Subscribed" : "Not Subscribed"; ?></p>
+    <p><strong>Comments:</strong> <?php echo $_SESSION['comments']; ?></p>
+
+    <h2>Uploaded Photo</h2>
+    <?php if (isset($_SESSION['photoPath'])) : ?>
+        <img src="<?php echo $_SESSION['photoPath']; ?>" width="200">
+    <?php endif; ?>
+
+    <a href="?step=1"><button type="button">Restart</button></a>
+<?php endif; ?>
+
+</body>
 </html>
