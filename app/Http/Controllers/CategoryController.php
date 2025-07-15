@@ -15,8 +15,9 @@ class CategoryController extends Controller
         orderBy('category_id','desc')->paginate(4);
         return view('admin.category.list',compact('categories'));
     }
-    public function createPage()  {
-        return view('admin.category.create');
+    public function view($id)  {
+        $category = Category::findOrFail($id);
+        return view('admin.category.view',compact('category'));
     }
     public function create(request $request){
         $this->validateCreate($request);
@@ -33,18 +34,37 @@ class CategoryController extends Controller
     public function viewUpdate($id){
             return view('admin.category.viewUpdate', ['id' => $id]);
     }
-    public function edit(request $request){
-        $category_id = $request->toArray()['id'];
-        $name = $request->toArray()['category_name'];
-        // dd($category_id);
+    public function createPage()
+    {
+        return view('admin.category.create');
+    }
+    public function edit(Request $request)
+    {
+        // Validate the incoming request data
+        $validated = $request->validate([
+            'id' => 'required|exists:categories,category_id', // Ensure category_id exists in categories table
+            'category_name' => 'required|string|min:2|max:100', // Required, string, 2-100 chars
+        ]);
+
+        // Extract validated data
+        $category_id = $validated['id'];
+        $name = $validated['category_name'];
+
+        // Find the category by ID
         $category = Category::findOrFail($category_id);
+
+        // Update the category name
         $category->name = $name;
 
         // Save the changes to the database
         $category->save();
+
+        // Flash success message to session
         session()->flash('updateSuccess', 'Category updated successfully!');
+
+        // Redirect to the category list
         return redirect()->route('category#list');
-}
+    }
     // private
     private function validateCreate(Request $request)
     {

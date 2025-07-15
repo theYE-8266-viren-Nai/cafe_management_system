@@ -5,6 +5,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AjaxController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\BlogController;
 use App\Http\Controllers\CartController;
 use App\Http\Controllers\OrderController;
 use App\Http\Controllers\ProductController;
@@ -31,6 +32,7 @@ Route::get('dashboard', [AuthController::class, 'authenticate'])->name('dashboar
 Route::middleware('admin')->group(function () {
     Route::prefix('category')->group(function () {
         Route::get('list', [CategoryController::class, 'list'])->name('category#list');
+        Route::get('view/{id}', [CategoryController::class, 'view'])->name('category#view');
         Route::get('createPage', [CategoryController::class, 'createPage'])->name('category#createPage');
         Route::post('create', [CategoryController::class, 'create'])->name('category#create');
         Route::get('delete/{id}', [CategoryController::class, 'delete'])->name('category#delete');
@@ -75,6 +77,16 @@ Route::middleware('admin')->group(function () {
             Route::get('delete/{id}', [AuthController::class, 'deleteAdmin'])->name('admin.adminList.delete');
             Route::get('roleChange/{id}', [AuthController::class, 'roleChange'])->name('admin.adminList.roleChange');
         });
+        Route::prefix('blogs')->group(function () {
+            Route::get('blogs', [BlogController::class, 'blogs'])->name('admin.blogs.viewBlogs');
+            Route::get('create', [BlogController::class, 'create'])->name('admin.blogs.create');
+            Route::get('view/{id}', [BlogController::class, 'view'])->name('admin.blog.view');
+            Route::post('createBlogData', [BlogController::class, 'createBlogData'])->name('admin.blogs.createBlogData');
+            Route::get('edit/{id}', [BlogController::class, 'viewUpdate'])->name('admin.blogs.edit');
+            Route::put('update/{id}', [BlogController::class, 'edit'])->name('admin.blogs.update');
+            Route::delete('delete/{id}', [BlogController::class, 'delete'])->name('admin.blogs.destroy');
+
+        });
     });
 
 });
@@ -83,7 +95,15 @@ Route::middleware('admin')->group(function () {
 
 // User-specific routes
 Route::group(['prefix' => 'user', 'middleware' => 'user'], function () {
-    Route::get('home', [userController::class, 'home'])->name('user.home');
+    Route::get('orderMenu', [userController::class, 'orderMenu'])->name('user.orderMenu');
+    Route::get('menu', [userController::class, 'menu'])->name('user.menu');
+    Route::get('search', [userController::class, 'search'])->name('user.search');
+    Route::get('lookMore/{id}', [BlogController::class, 'lookMore'])->name('user.menu.lookMore');
+    Route::get('home1', [userController::class, 'home1'])->name('user.home1');
+    Route::get('anotherPage', [userController::class, 'anotherPage'])->name('user.anotherPage');
+    Route::get('blogs', [userController::class, 'blogs'])->name('user.blogs');
+    Route::get('viewThroughCategory/{id}', [userController::class, 'viewThroughCategory'])->name('user.viewThroughCategory');
+    Route::get('aboutUs', [userController::class, 'aboutUs'])->name('user.aboutUs');
     Route::get('changePassword', [userController::class, 'changePassword'])->name('user.changePassword');
     Route::post('changePasswordData', [userController::class, 'changePasswordData'])->name('user.changePasswordData');
     Route::get('account', [userController::class, 'account'])->name('user.account');
@@ -94,6 +114,14 @@ Route::group(['prefix' => 'user', 'middleware' => 'user'], function () {
     Route::get('history', [userController::class, 'history'])->name('user.history');
     Route::get('qrcode', [userController::class, 'generateQRCode'])->name('user.qrcode');
     Route::post('createReview', [userController::class, 'createReview'])->name('user.review');
+    Route::post('deleteReceipt', [userController::class, 'deleteReceipt'])->name('user.deleteReceipt');
+    Route::get('home2', [userController::class, 'home2'])->name('user.home2');
+    //blogs
+    Route::group(['prefix' => 'blogs'], function () {
+        Route::get('more/{id}', [userController::class, 'more'])->name('user.blogs.seeMore');
+        // Route::delete('remove/{id}', [CartController::class, 'remove'])->name('cart.remove');
+
+    });
 
     //cart
 
@@ -111,6 +139,7 @@ Route::group(['prefix' => 'user', 'middleware' => 'user'], function () {
 
 });
 Route::group(['prefix' => 'ajax'], function () {
+    Route::get('productList', [AjaxController::class, 'menuSort'])->name('ajax.productList');
     Route::patch('update', [AjaxController::class, 'update'])->name('ajax.update');
     Route::get('pizzaList', [AjaxController::class, 'pizzaList'])->name('ajax.pizzaList');
     Route::get('cart', [AjaxController::class, 'cart'])->name('ajax.cart');
@@ -118,18 +147,21 @@ Route::group(['prefix' => 'ajax'], function () {
     // Route::post('updateCart', [CartController::class, 'updateCart'])->name('ajax.updateCart');
     Route::post('updateForButtons', [AjaxController::class, 'update'])->name('ajax.updateForButtons');
     Route::post('remove', [AjaxController::class, 'remove'])->name('ajax.remove');
-    // Route::post('proceedToCheckout', [AjaxController::class, 'proceedToCheckout'])->name('ajax.proceedToCheckout');
-    // Route::post('/generate-qr', function (Illuminate\Http\Request $request) {
-    //     // dd($request->order_data);
-    //     Log::info('QR Code Data:', ['order_data' => $request->order_data]);
-    //     if (!$request->order_data) {
-    //         return response()->json(['error' => 'No order data provided'], 400);
-    //     }
-    //     $qrCode = DNS2D::getBarcodeHTML($request->order_data, 'QRCODE');
-    //     return response()->json(['qr_code' => $qrCode]);
-    // });
+    Route::post('qrHasBeenScanned', [AjaxController::class, 'qrHasBeenScanned'])->name('ajax.qrHasBeenScanned');
+    Route::post('proceedToCheckout', [AjaxController::class, 'proceedToCheckout'])->name('ajax.proceedToCheckout');
+    Route::post('/generate-qr', function (Illuminate\Http\Request $request) {
+        // dd($request->order_data);
+        Log::info('QR Code Data:', ['order_data' => $request->order_data]);
+        if (!$request->order_data) {
+            return response()->json(['error' => 'No order data provided'], 400);
+        }
+        $qrCode = DNS2D::getBarcodeHTML($request->order_data, 'QRCODE');
+        return response()->json(['qr_code' => $qrCode]);
+    });
     Route::post('/generate-qr', [AjaxController::class, 'generateQR'])->name('ajax.generateQR');
 });
 Route::get('/phpCode', function () {
     return view('phpCode'); });
 //I have made changes
+Route::get('/testT', function () {
+    return view('testingTailWind'); });

@@ -1,48 +1,78 @@
 @extends('admin.layouts.master')
-@section('title','category/create')
+@section('title','Add Category')
 @section('content')
-<div class="container-fluid">
-    <div class="row">
-        <div class="col-3 offset-8">
-            <a href="{{ route('category#list') }}"><button class="my-3 text-white btn bg-dark">List</button></a>
+<div class="px-4 container-fluid">
+    <!-- Back to List Button -->
+    <div class="mb-4 row">
+        <div class="col-12 text-end">
+            <a href="{{ route('category#list') }}" class="text-white btn"
+               style="background-color: #6c5ce7 !important;">
+                <i class="fas fa-arrow-left me-2"></i>Back to List
+            </a>
         </div>
     </div>
-    <div class="col-lg-6 offset-3">
-        <div class="card">
-            <div class="card-body">
-                <div class="card-title">
-                    <h3 class="text-center title-2">Add your item</h3>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="border-0 card" style="box-shadow: 0 0 15px rgba(0,0,0,0.1);">
+                <!-- Card Header -->
+                <div class="border-0 card-header" style="background-color: #6c5ce7 !important;">
+                    <h3 class="py-3 m-0 text-center text-white">
+                        <i class="fas fa-folder-plus me-2"></i>Add New Category
+                    </h3>
                 </div>
-                <hr>
-                <form action="{{ route('category#create') }}" method="post" novalidate="novalidate">
-                    @csrf
-                    <div class="form-group">
-                        <label for="category_name" class="mb-1 control-label">Name</label>
-                        <input id="category_name" name="category_name" type="text"
-                            class="form-control @error('category_name') is-invalid @enderror" aria-required="true"
-                            aria-invalid="false" placeholder="Seafood..." value="{{ old('category_name') }}">
-                        <!-- Retain old input -->
 
-                        <!-- Error message display -->
-                        @error('category_name')
-                        <div class="invalid-feedback">
-                            {{ $message }}
-                            <!-- This will display the error message -->
+                <div class="p-5 card-body" style="background-color: #f8f9fa !important;">
+                    <form action="{{ route('category#create') }}" method="post" novalidate="novalidate">
+                        @csrf
+                        <!-- Category Name Input -->
+                        <div class="mb-4 form-group">
+                            <label for="category_name" class="mb-3 form-label h5"
+                                   style="color: #6c5ce7 !important;">
+                                <i class="fas fa-tag me-2"></i>Category Name
+                            </label>
+                            <input id="category_name"
+                                   name="category_name"
+                                   type="text"
+                                   class="form-control form-control-lg @error('category_name') is-invalid @enderror"
+                                   placeholder="Enter category name..."
+                                   value="{{ old('category_name') }}"
+                                   style="border: 2px solid #e0e0e0 !important; padding: 12px !important; border-radius: 10px !important;"
+                                   autofocus>
+
+                            @error('category_name')
+                            <div class="invalid-feedback">
+                                <i class="fas fa-exclamation-circle me-1"></i>
+                                {{ $message }}
+                            </div>
+                            @enderror
                         </div>
-                        @enderror
-                    </div>
 
-                    <div>
-                        <button id="payment-button" type="submit" class="btn btn-lg btn-info btn-block">
-                            <span id="payment-button-amount">Create</span>
-                            <span id="payment-button-sending" style="display:none;">Sending…</span>
-                            <i class="fa-solid fa-circle-right"></i>
-                        </button>
-                    </div>
-                </form>
+                        <!-- Category Description Input -->
 
+          <!-- Submit Button -->
+                        <div class="text-center">
+                            <button type="submit" class="px-5 py-3 text-white btn btn-lg"
+                                    style="background-color: #6c5ce7 !important; border-radius: 50px !important; min-width: 200px !important;">
+                                <i class="fas fa-plus-circle me-2"></i>
+                                <span>Create Category</span>
+                            </button>
+                        </div>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
 </div>
+
+<style>
+    .form-control:focus {
+        border-color: #6c5ce7 !important;
+        box-shadow: 0 0 0 0.2rem rgba(108, 92, 231, 0.25) !important;
+    }
+
+    .btn:hover {
+        opacity: 0.9 !important;
+    }
+</style>
 @endsection

@@ -19,6 +19,7 @@ return new class extends Migration
             $table->integer('total');
             $table->string('order_code');
             $table->integer('status')->default(0);
+            $table->string('payment_method');
             $table->timestamps();
         });
     }

@@ -25,7 +25,7 @@ class AuthController extends Controller
             return redirect()->route('category#list');
         }
         else {
-            return redirect()->route('user.home');
+            return redirect()->route('user.orderMenu');
         }
     }
     public function viewChangePassword(){
@@ -56,6 +56,7 @@ class AuthController extends Controller
 
         // Retrieve user data for the given ID
         $user_data = User::where('id', $user_id)->select('*')->first();
+        // dd($user_data->toArray());
         // Pass 'user_data' to the view using 'compact'
         return view('account.detail', compact('user_data'));
     }
@@ -68,42 +69,44 @@ class AuthController extends Controller
         return view('account.editProfile',compact('user'));
     }
     public function editProfileData(Request $request)
-    {
-        $user = Auth::user(); // Get the authenticated user
+{
+    $user = Auth::user(); // Get the authenticated user
 
-        // Update the user's name and email
-        $user->name = $request->name;
-        $user->email = $request->email;
+    // Update the user's name, email, phone, and address
+    $user->name = $request->name;
+    $user->email = $request->email;
+    $user->phone = $request->phone; // Update phone if provided
+    $user->address = $request->address; // Update address if provided
 
-        // Handle profile picture upload
-        if ($request->hasFile('image')) {
-            // Check if the user already has a profile picture
-            if ($user->profile_photo_path) {
-                // Delete the existing profile image from storage
-                Storage::delete('public/' . $user->profile_photo_path);
-            }
-
-            // Generate a unique name for the new image
-            $fileName = uniqid() . '_' . $request->file('image')->getClientOriginalName();
-
-            // Store the new profile image in the 'public' folder
-            $request->file('image')->storeAs('public/profile_pictures', $fileName);
-
-            // Update the user's profile picture path
-            $user->profile_photo_path = 'profile_pictures/' . $fileName; // Save the file path with the folder name
+    // Handle profile picture upload
+    if ($request->hasFile('image')) {
+        // Check if the user already has a profile picture
+        if ($user->profile_photo_path) {
+            // Delete the existing profile image from storage
+            Storage::delete('public/' . $user->profile_photo_path);
         }
 
-        // If a new password is provided, update it
-        if ($request->filled('password')) {
-            $user->password = Hash::make($request->password);
-        }
+        // Generate a unique name for the new image
+        $fileName = uniqid() . '_' . $request->file('image')->getClientOriginalName();
 
-        // Save the user's changes
-        $user->save();
+        // Store the new profile image in the 'public/profile_pictures' folder
+        $request->file('image')->storeAs('public/profile_pictures', $fileName);
 
-        // Redirect with a success message
-        return redirect()->route('category#list')->with('success', 'Your profile has been updated successfully.');
+        // Update the user's profile picture path
+        $user->profile_photo_path = 'profile_pictures/' . $fileName; // Save the file path with the folder name
     }
+
+    // If a new password is provided, update it
+    if ($request->filled('password')) {
+        $user->password = Hash::make($request->password);
+    }
+
+    // Save the user's changes
+    $user->save();
+
+    // Redirect with a success message
+    return redirect()->route('category#list')->with('success', 'Your profile has been updated successfully.');
+}
     //adminList
     public function viewAdminList(){
         $admin = User::where('role', 'admin') // Filter by role

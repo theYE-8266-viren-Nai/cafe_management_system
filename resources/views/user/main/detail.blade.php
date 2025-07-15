@@ -1,184 +1,141 @@
 @extends('user.layouts.master')
 
 @section('container')
-<!-- Breadcrumb Start -->
-<div class="container-fluid">
-    <div class="row px-xl-5">
-        <a href="javascript:history.back()" class="my-3 btn btn-secondary ms-3">Go Back</a>
-        <div class="col-12">
-            <nav class="p-3 rounded breadcrumb bg-light mb-30">
-                <a class="breadcrumb-item text-dark" href="/">Home</a>
-                <a class="breadcrumb-item text-dark" href="/shop">Shop</a>
-                <span class="breadcrumb-item active">Shop Detail</span>
-            </nav>
+<!-- Breadcrumb Section -->
+<div class="py-4 container-fluid" style="background-color: #f5e8d8;">
+    <div class="container">
+        <div class="row align-items-center">
+            <div class="col-12 col-md-6">
+                <a href="javascript:history.back()" class="mb-3 shadow-sm btn btn-outline-dark rounded-pill mb-md-0" style="border-color: #8B4513; color: #8B4513;">← Go Back</a>
+            </div>
+            <div class="col-12 col-md-6">
+                <nav class="p-0 bg-transparent breadcrumb justify-content-md-end">
+                    <a class="breadcrumb-item text-dark" href="/" style="color: #8B4513;">Home</a>
+                    <a class="breadcrumb-item text-dark" href="/shop" style="color: #8B4513;">Shop</a>
+                    <span class="breadcrumb-item active text-muted">Menu Detail</span>
+                </nav>
+            </div>
         </div>
     </div>
+</div>
 
-    <!-- Review Section -->
-    <div class="row px-xl-5">
-        <div class="mx-auto col-md-8">
-            <h4 class="mb-4">Customer Reviews</h4>
+<!-- Product Detail Section -->
+<div class="container py-5">
+    <div class="row g-5">
+        <!-- Product Image -->
+        <div class="col-lg-6">
+            <div class="overflow-hidden rounded shadow-lg image-container">
+                <img src="{{ asset('storage/' . $pizza[0]['image']) }}" class="img-fluid w-100" alt="{{ $pizza[0]['name'] }}" style="object-fit: cover; max-height: 450px;">
+            </div>
+        </div>
+
+        <!-- Product Info -->
+        <div class="col-lg-6">
+            <div class="p-4 rounded shadow-sm cafe-card" style="background-color: #fff;">
+                <h1 class="mb-3 fw-bold cafe-title" style="color: #8B4513;">{{ $pizza[0]['name'] }}</h1>
+                <div class="mb-3 d-flex align-items-center">
+                    <div class="text-warning me-2">
+                        {{--  @for ($i = 0; $i < 5; $i++) <i class="bi bi-star-fill"></i> @endfor  --}}
+                    </div>
+                    <small class="text-muted">({{ $reviewCount }} reviews)</small>
+                </div>
+                <h3 class="mb-4 fw-semibold" style="color: #D2B48C;">{{ number_format($pizza[0]['price'], 0) }} Kyats</h3>
+                <p class="mb-4 text-dark fs-5">{{ $pizza[0]['description'] }}</p>
+
+                <!-- Quantity and Buttons -->
+                <div class="flex-wrap gap-3 mb-4 d-flex align-items-center">
+                    <div class="input-group quantity" style="width: 130px;">
+                        <input type="text" class="text-center border-0 form-control bg-light" value="1" id="orderCount" readonly>
+                    </div>
+                    <button type="button" class="px-4 shadow-sm btn rounded-pill" id="addCart" style="background-color: #8B4513; color: #fff; border: none;">
+                        <i class="bi bi-cart me-2"></i>Add to Cart
+                    </button>
+                    <button type="button" class="px-4 shadow-sm btn rounded-pill" id="review" style="background-color: #D2B48C; color: #fff; border: none;">
+                        <i class="bi bi-chat-dots me-2"></i>Review
+                    </button>
+                    <input type="hidden" value="{{ Auth::user()->id }}" id="userId">
+                    <input type="hidden" value="{{ $pizza[0]['product_id'] }}" id="pizzaId">
+                </div>
+
+                <!-- Share Section -->
+                {{--  <div class="d-flex align-items-center">
+                    <strong class="text-dark me-3" style="color: #8B4513;">Share:</strong>
+                    <a href="#" class="text-dark me-2" style="color: #8B4513;"><i class="bi bi-facebook"></i></a>
+                    <a href="#" class="text-dark me-2" style="color: #8B4513;"><i class="bi bi-twitter"></i></a>
+                    <a href="#" class="text-dark me-2" style="color: #8B4513;"><i class="bi bi-instagram"></i></a>
+                    <a href="#" class="text-dark" style="color: #8B4513;"><i class="bi bi-linkedin"></i></a>
+                </div>  --}}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reviews Section -->
+<div class="container pb-5">
+    <div class="row">
+        <div class="mx-auto col-lg-8">
+            <h2 class="mb-4 fw-bold cafe-title" style="color: #8B4513;">Customer Reviews</h2>
 
             <!-- Display Reviews -->
+            <div id="reviewSection" class="mb-5">
+                @foreach ($reviews as $review)
+                <div class="mb-3 shadow-sm card cafe-card" style="background-color: #fff;">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h5 class="mb-0 fw-semibold" style="color: #8B4513;">{{ $review->user->name }}</h5>
+                            <span class="text-muted fst-italic">{{ $review->job_title ?? 'Customer' }}</span>
+                        </div>
+                        <p class="mt-2 text-muted">{{ $review->content }}</p>
+                    </div>
+                </div>
+                @endforeach
+            </div>
 
             <!-- Review Form -->
-            <div class="mt-4 card">
+            <div class="shadow-sm card cafe-card" style="background-color: #fff;" id="reviewForm">
                 <div class="card-body">
-                    <h5 class="card-title">Leave a Review</h5>
+                    <h5 class="mb-4 fw-semibold" style="color: #8B4513;">Leave a Review</h5>
                     <form action="{{ route('user.review') }}" method="POST">
                         @csrf
-
                         <input type="hidden" name="user_id" value="{{ Auth::user()->id }}">
-                        <input type="hidden" name="product_id" value="{{$pizza[0]['product_id'] }}">
-                        {{--  $pizza[0]['name']  --}}
+                        <input type="hidden" name="product_id" value="{{ $pizza[0]['product_id'] }}">
                         <div class="mb-3">
-                            <label for="rating" class="form-label">Rating</label>
-                            <select class="form-select" name="rating" required>
-                                <option value="5">★★★★★ (5)</option>
-                                <option value="4">★★★★☆ (4)</option>
-                                <option value="3">★★★☆☆ (3)</option>
-                                <option value="2">★★☆☆☆ (2)</option>
-                                <option value="1">★☆☆☆☆ (1)</option>
-                            </select>
+                            <label for="job_title" class="form-label fw-semibold" style="color: #8B4513;">Your Job Title</label>
+                            <input type="text" class="rounded shadow-sm form-control" id="job_title" name="job_title" placeholder="e.g., Barista" required>
                         </div>
-
                         <div class="mb-3">
-                            <label for="comment" class="form-label">Your Review</label>
-                            <textarea class="form-control" name="content" rows="3" required></textarea>
+                            <label for="content" class="form-label fw-semibold" style="color: #8B4513;">Your Review</label>
+                            <textarea class="rounded shadow-sm form-control" id="content" name="content" rows="3" placeholder="Share your thoughts..." required></textarea>
                         </div>
-
-                        <button type="submit" class="btn btn-primary">Submit Review</button>
+                        <button type="submit" class="shadow-sm btn rounded-pill" style="background-color: #8B4513; color: #fff; border: none;">Submit Review</button>
                     </form>
                 </div>
             </div>
-
         </div>
     </div>
 </div>
 
-<!-- Breadcrumb End -->
-
-<!-- Shop Detail Start -->
-<div class="pb-5 container-fluid">
-    <div class="row px-xl-5">
-        <!-- Product Image Section -->
-        <div class="col-lg-5 mb-30">
-            <div id="product-carousel" class="carousel slide" data-bs-ride="carousel">
-                <div class="carousel-inner">
-                    <div class="carousel-item active">
-                        <img class="d-block w-100" src="{{ asset('storage/' . $pizza[0]['image']) }}"
-                            alt="{{ $pizza[0]['name'] }}">
-                    </div>
-                    <!-- Add more carousel items if there are multiple images -->
-                </div>
-            </div>
-        </div>
-
-        <!-- Product Info Section -->
-        <div class="col-lg-7 mb-30">
-            <div class="p-4 rounded bg-light">
-                <h3 class="mb-3">{{ $pizza[0]['name'] }}</h3>
-                <div class="mb-3 d-flex">
-                    <div class="text-primary">
-                        {{--  <small class="fas fa-star"></small>
-                        <small class="fas fa-star"></small>
-                        <small class="fas fa-star"></small>
-                        <small class="fas fa-star-half-alt"></small>
-                        <small class="far fa-star"></small>  --}}
-                    </div>
-                    <small class="ms-2">{{ $reviewCount }} reviews</small>
-                </div>
-                <h3 class="mb-4 font-weight-semi-bold">{{ $pizza[0]['price'] }}</h3>
-                <p class="mb-4">{{ $pizza[0]['description'] }}</p>
-                <div class="pt-2 mb-4 d-flex align-items-center">
-                    <div class="mr-3 input-group quantity" style="width: 130px;">
-                        <div class="input-group-btn">
-                            <button class="btn btn-primary btn-minus">
-                                <i class="fa fa-minus"></i>
-                            </button>
-                        </div>
-                        <input type="text" class="text-center border-0 form-control bg-secondary" value="1"
-                            id="orderCount">
-                        <div class="input-group-btn">
-                            <button class="btn btn-primary btn-plus">
-                                <i class="fa fa-plus"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <button type="button" class="px-3 btn btn-primary" id="addCart"><i
-                            class="mr-1 fa fa-shopping-cart"></i> Add To
-                        Cart</button> ||
-                    <button type="button" class="px-3 btn btn-primary" id="review"><i
-                            class="mr-1 fa fa-shopping-cart"></i> Review
-                    </button>
-                    <input type="hidden" value="{{ Auth::user()->id }}" id="userId">
-                    <input type="hidden" value="{{ $pizza[0]['product_id']  }}" id="pizzaId">
-                </div>
-                <!-- Product Share Section -->
-                <div class="d-flex align-items-center">
-
-                    <div class="d-flex">
-                        <strong class="text-dark me-2">Share on:</strong>
-                        <a class="px-2 text-dark" href="#"><i class="fab fa-facebook-f"></i></a>
-                        <a class="px-2 text-dark" href="#"><i class="fab fa-twitter"></i></a>
-                        <a class="px-2 text-dark" href="#"><i class="fab fa-linkedin-in"></i></a>
-                        <a class="px-2 text-dark" href="#"><i class="fab fa-pinterest"></i></a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-<div id="reviewSection">
-    @foreach ($reviews as $review)
-        <div class="mb-3 card">
-            <div class="card-body">
-                <h5>{{ $review->user->name }}</h5><p class="mb-1">Rating:
-                    <strong>
-                        @for ($i = 0; $i < $review->rating; $i++)
-                            ★
-                        @endfor
-                    </strong>
-
-                <p>{{ $review->content }}</p>
-            </div>
-        </div>
-    @endforeach
-</div>
-<!-- "You May Also Like" Section -->
-<div class="py-5 container-fluid">
-    <h2 class="mb-4 section-title position-relative text-uppercase"><span class="px-3 bg-secondary">You May Also
-            Like</span></h2>
-    <div class="row px-xl-5">
+<!-- Related Products Carousel -->
+<div class="py-5 container-fluid" style="background-color: #D2B48C;">
+    <h2 class="mb-4 text-center fw-bold cafe-title" style="color: #8B4513;">You May Also Like</h2>
+    <div class="container">
         <div class="owl-carousel related-carousel">
             @foreach ($relatedProducts as $relatedProduct)
-            <div class="rounded product-item bg-light">
-                <div class="overflow-hidden position-relative">
-                    <img class="img-fluid w-100" src="{{ asset('storage/' . $relatedProduct['image']) }}" alt="">
-                    <div class="product-action">
-                        <a class="btn btn-outline-dark btn-square" href="{{ route('user.cartList') }}"><i
-                                class="fa fa-shopping-cart"></i></a>
-                        <a class="btn btn-outline-dark btn-square"
-                            href="{{ route('user.pizza.detail',$relatedProduct['product_id']) }}"><i
-                                class="fa fa-info"></i></a>
-
+            <div class="text-center rounded shadow-sm product-item bg-light">
+                <div class="overflow-hidden image-container">
+                    <img src="{{ asset('storage/' . $relatedProduct['image']) }}" class="img-fluid w-100" alt="{{ $relatedProduct['name'] }}" style="object-fit: cover; height: 200px;">
+                    <div class="px-2 product-action">
+                        <a class="shadow-sm btn btn-outline-dark btn-square" href="{{ route('user.pizza.detail', $relatedProduct['product_id']) }}" style="border-color: #8B4513; color: #8B4513;"><i class="bi bi-cart"></i></a>
+                        <a class="shadow-sm btn btn-outline-dark btn-square" href="{{ route('user.blogs.seeMore', $relatedProduct['product_id']) }}" style="border-color: #8B4513; color: #8B4513;"><i class="bi bi-info-circle"></i></a>
                     </div>
                 </div>
-                <div class="py-3 text-center">
-                    <a class="h6 text-decoration-none" href="#">{{ $relatedProduct['name'] }}</a>
+                <div class="py-3">
+                    <a class="h6 text-dark text-decoration-none" href="#" style="color: #8B4513;">{{ $relatedProduct['name'] }}</a>
                     <div class="mt-2 d-flex justify-content-center align-items-center">
-                        <h5 class="text-primary">${{ $relatedProduct['price'] }}</h5>
-                        <h6 class="text-muted ms-2"><del>${{ $relatedProduct['original_price'] }}</del></h6>
+                        <h5 style="color: #8B4513;">{{ number_format($relatedProduct['price'], 0) }} Kyats</h5>
+                        {{--  <h6 class="text-muted ms-2"><del>{{ number_format($relatedProduct['original_price'], 0) }} Kyats</del></h6>  --}}
                     </div>
-                    <div class="mt-1 text-primary">
-                        <small class="fa fa-star"></small>
-                        <small class="fa fa-star"></small>
-                        <small class="fa fa-star"></small>
-                        <small class="fa fa-star"></small>
-                        <small class="fa fa-star"></small>
-                        <small>(99)</small>
-                    </div>
+
                 </div>
             </div>
             @endforeach
@@ -186,33 +143,106 @@
     </div>
 </div>
 @endsection
+
 @section('scriptSource')
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
     $(document).ready(function() {
-        $('#addCart').click(function(){
+        // Add to Cart
+        $('#addCart').click(function() {
             const url = 'http://127.0.0.1:8000/ajax/cart';
-            const homeUrl = 'http://127.0.0.1:8000/user/home';
-            $source = {
-                'userId' : $('#userId').val(),
-                'pizzaId' : $('#pizzaId').val(),
-                'count' : $('#orderCount').val()
+            const homeUrl = 'http://127.0.0.1:8000/user/orderMenu';
+            const source = {
+                'userId': $('#userId').val(),
+                'pizzaId': $('#pizzaId').val(),
+                'count': $('#orderCount').val()
             };
-            console.log('hello ');
             $.ajax({
                 type: 'get',
                 url: url,
-                dataType: 'json' ,
-                data: $source ,
+                dataType: 'json',
+                data: source,
                 success: function(response) {
-                    if (response.status == 'success'){
+                    if (response.status == 'success') {
                         window.location.href = homeUrl;
                     }
+                },
+                error: function(xhr) {
+                    alert('Error adding to cart: ' + xhr.responseText);
                 }
             });
-        })
-        $('#review').click(function(){
-            console.log('HELLO WORLD');
-         })
+        });
+
+        // Review Button Scrolls to Review Form
+        $('#review').click(function() {
+            $('html, body').animate({
+                scrollTop: $('#reviewForm').offset().top - 100
+            }, 800);
+            $('#content').focus();
+        });
+
+        // Fixed Quantity Controls
+        $('.btn-plus').off('click').on('click', function(e) {
+            e.preventDefault();
+            let count = parseInt($('#orderCount').val()) || 1; // Default to 1 if NaN
+            count += 1; // Properly increment
+            $('#orderCount').val(count);
+        });
+
+        $('.btn-minus').off('click').on('click', function(e) {
+            e.preventDefault();
+            let count = parseInt($('#orderCount').val()) || 1; // Default to 1 if NaN
+            if (count > 1) {
+                count -= 1; // Properly decrement
+                $('#orderCount').val(count);
+            }
+        });
+
+        // Button Hover Effects
+        $('#addCart, #review').hover(
+            function() { $(this).css('background-color', '#A0522D'); },
+            function() { $(this).css('background-color', $(this).attr('id') === 'addCart' ? '#8B4513' : '#D2B48C'); }
+        );
     });
 </script>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
 @endsection
+
+<style>
+    .cafe-card {
+        background-color: #fff !important;
+        border: none !important;
+        transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+    }
+    .cafe-card:hover {
+        transform: translateY(-5px) !important;
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1) !important;
+    }
+    .cafe-title {
+        font-family: 'Playfair Display', serif !important;
+        letter-spacing: 1px !important;
+    }
+    .image-container {
+        position: relative !important;
+    }
+    .image-container img {
+        transition: transform 0.3s ease !important;
+    }
+    .image-container:hover img {
+        transform: scale(1.05) !important;
+    }
+    .btn:hover { opacity: 0.9; }
+    .product-action {
+        position: absolute !important;
+        top: 50% !important;
+        left: 50% !important;
+        transform: translate(-50%, -50%) !important;
+        opacity: 0 !important;
+        transition: opacity 0.3s ease !important;
+    }
+    .product-item:hover .product-action {
+        opacity: 1 !important;
+    }
+</style>

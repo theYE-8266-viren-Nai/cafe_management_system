@@ -34,7 +34,7 @@ class CreateNewUser implements CreatesNewUsers
         $image->storeAs('public/profile_pictures', $imageName); // Store the image
         $validatedData['profile_photo_path'] = 'profile_pictures/' . $imageName; // Save the path
     }
-
+// @dd($input);
     return User::create([
         'name' => $validatedData['name'],
         'email' => $validatedData['email'],

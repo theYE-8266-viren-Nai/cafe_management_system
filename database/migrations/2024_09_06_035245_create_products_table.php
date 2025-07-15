@@ -19,6 +19,10 @@ return new class extends Migration
             $table->string('image')->nullable();
             $table->integer('price');
             $table->integer('stock');
+            // $table->text('nutrition')->nullable();
+            // $table->text('full_description')->nullable();
+            // $table->text('ingredient')->nullable();
+            // $table->text('preparation')->nullable();
             $table->integer('view_count')->default(0);
             $table->timestamps();
         });

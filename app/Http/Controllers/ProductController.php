@@ -61,14 +61,33 @@ class ProductController extends Controller
         $pizza = Product::where('product_id',$id)->firstOrFail()->toArray();
         return view('admin.products.viewUpdate' , ['pizza' => $pizza ,  'categories' => $categories]);
     }
-    public function editPizzaData(Request $request ){
-        // dd($request->toArray());
-        $id = $request['product_id'];
-        // $pizza = Product::where('product_id',$id)->first();
-        $pizza = Product::findOrFail($id);
-        $pizza->name = $request->name;
-        $pizza->description = $request->description;
-        $pizza->price = $request->price;
+    public function editPizzaData(Request $request)
+    {
+        // Validate the incoming request data
+        $validated = $request->validate([
+            'product_id' => 'required|exists:products,product_id', // Ensure product_id exists in products table
+            'name' => 'required|string|min:2|max:100', // Name is required, string, 2-100 chars
+            'description' => 'required|string|max:255', // Short description, max 255 chars
+            'price' => 'required|numeric|min:0|max:999999.99', // Price is numeric, reasonable range
+            'full_description' => 'nullable|string|max:1000', // Optional, max 1000 chars
+            'nutrition' => 'nullable|string|max:500', // Optional, max 500 chars
+            'ingredient' => 'nullable|string|max:500', // Optional, max 500 chars
+            'preparation' => 'nullable|string|max:500', // Optional, max 500 chars
+            'image' => 'nullable|image|mimes:jpeg,png,gif|max:2048', // Optional image, specific types, max 2MB
+        ]);
+
+        // Find the pizza by product_id
+        $pizza = Product::findOrFail($validated['product_id']);
+
+        // Update pizza attributes with validated data
+        $pizza->name = $validated['name'];
+        $pizza->description = $validated['description'];
+        $pizza->price = $validated['price'];
+        $pizza->full_description = $validated['full_description'];
+        $pizza->nutrition = $validated['nutrition'];
+        $pizza->ingredient = $validated['ingredient'];
+        $pizza->preparation = $validated['preparation'];
+
         // Handle profile picture upload
         if ($request->hasFile('image')) {
             // Check if the user already has a profile picture
@@ -80,14 +99,18 @@ class ProductController extends Controller
             // Generate a unique name for the new image
             $fileName = uniqid() . '_' . $request->file('image')->getClientOriginalName();
 
-            // Store the new profile image in the 'public' folder
+            // Store the new profile image in the 'public/images' folder
             $request->file('image')->storeAs('public/images', $fileName);
 
-            // Update the user's profile picture path
-            $pizza->image = 'images/' . $fileName; // Save the file path with the folder name
+            // Update the pizza's image path
+            $pizza->image = 'images/' . $fileName;
         }
+
+        // Save the updated pizza record
         $pizza->save();
-        return redirect()->route('admin.product.list');
+
+        // Redirect with success message
+        return redirect()->route('admin.product.list')->with('success', 'Pizza updated successfully');
     }
     // validation
     private function  validation ($request){
@@ -99,13 +122,34 @@ class ProductController extends Controller
             'image' => 'required|image|mimes:jpeg,png,jpg,gif|max:5048', // Image is required, must be an image, and max 2MB
         ]);
     }
-    private function dataSaveMethod($request){
+    private function dataSaveMethod(Request $request)
+    {
+        // Validate the incoming request data
+        $validated = $request->validate([
+            'name' => 'required|string|min:2|max:100',
+            'description' => 'required|string|max:255',
+            'full_description' => 'nullable|string|max:1000',
+            'nutrition' => 'nullable|string|max:500',
+            'ingredient' => 'nullable|string|max:500',
+            'preparation' => 'nullable|string|max:500',
+            'price' => 'required|numeric|min:0|max:999999.99',
+            'image' => 'required|image|mimes:jpeg,png,gif|max:2048', // Max 2MB
+            'category_id' => 'required|exists:categories,category_id', // Assuming you have a categories table
+            'stock' => 'required|integer|min:0|max:9999',
+        ]);
+
+        // Create a new Product instance
         $pizza = new Product();
         $pizza->name = $request->name;
         $pizza->description = $request->description;
         $pizza->price = $request->price;
-        $pizza->category_id = $request->category_id;
-        $pizza->stock = $request->stock;
+        $pizza->full_description = $request->full_description;
+        $pizza->nutrition = $request->nutrition;
+        $pizza->ingredient = $request->ingredient;
+        $pizza->preparation = $request->preparation;
+        $pizza->category_id = $request->category_id; // Added category_id
+        $pizza->stock = $request->stock; // Added stock
+
         // Handle image upload
         if ($request->hasFile('image')) {
             $fileName = uniqid() . '_' . $request->file('image')->getClientOriginalName();
@@ -115,5 +159,7 @@ class ProductController extends Controller
 
         // Save the pizza data to the database
         $pizza->save();
+
+        return $pizza; // Optional: Return the saved model if needed
     }
 }

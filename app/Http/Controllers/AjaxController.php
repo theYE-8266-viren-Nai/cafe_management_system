@@ -26,6 +26,22 @@ class AjaxController extends Controller
         }
         return $data;
     }
+    public function menuSort(request $request){
+        logger($request->all());
+        $categoryName = $request->query('category_name');
+
+        if ($categoryName) {
+            // Assuming you have a relationship or column for category name
+            $products = Product::whereHas('category', function ($query) use ($categoryName) {
+                $query->where('name', $categoryName);
+            })->get();
+        } else {
+            // Return all products if no category is selected
+            $products = Product::all();
+        }
+
+        return response()->json($products);
+    }
     // cart
     public function cart(request $request)
     {
@@ -45,13 +61,14 @@ class AjaxController extends Controller
                 logger($request->all());
 
                 foreach ($request->order_list as $item) {
-                    // logger($item);
+                    logger('Inserting Order:', $item);
                     OrderList::create([
                         'user_id' => $item['user_id'],
                         'product_id' => $item['product_id'],
                         'qty' => $item['qty'],
                         'total' => $item['total_value'], // Use the total value from the request
                         'order_code' => $request->order_code,
+                        'payment_method' =>  $request->payment_method
                     ]);
                 }
                 $product = Product::find($item['product_id']);
@@ -77,20 +94,7 @@ class AjaxController extends Controller
     }
 
     //     Cart::where('user_id', Auth::user()->id)->delete();
-    public function generateQR(Request $request)
-    {
-        Log::info('QR Code Data:', ['order_data' => $request->order_data]);
 
-        if (!$request->order_data) {
-            return response()->json(['error' => 'No order data provided'], 400);
-        }
-
-        // Instantiate DNS2D class
-        $barcode = new DNS2D();
-        $qrCode = $barcode->getBarcodeHTML(json_encode($request->order_data), 'QRCODE');
-
-        return response()->json(['qr_code' => $qrCode]);
-    }
     public function update(Request $request){
         $data = $request->toArray();
         $cart_id = $data['cart_id'];
@@ -137,6 +141,25 @@ class AjaxController extends Controller
             // Return an error response
             return response()->json(['message' => 'Cart item not found.'], 404);
         }
+    }
+    public function generateQR(Request $request)
+    {
+        Log::info('QR Code Data:', ['order_data' => $request->order_data]);
+
+        if (!$request->order_data) {
+            return response()->json(['error' => 'No order data provided'], 400);
+        }
+
+        // Instantiate DNS2D class
+        $barcode = new DNS2D();
+        $qrCode = $barcode->getBarcodeHTML(json_encode($request->order_data), 'QRCODE');
+
+        return response()->json(['qr_code' => $qrCode]);
+    }
+    public function qrHasBeenScanned(request $request){
+        $id = $request->orderListId;
+        // logger($id);
+        $removed = OrderList::where('id', $id)->delete();
     }
     //private functions
     private function getOrderData($data)
